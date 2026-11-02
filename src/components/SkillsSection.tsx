@@ -8,6 +8,8 @@ interface SkillsSectionProps {
 }
 
 export const SkillsSection: React.FC<SkillsSectionProps> = ({ certifications, profile }) => {
+  const safeCertifications = certifications || [];
+  
   const competencies = profile?.coreCompetencies || [
     {
       category: 'Business Analysis',
@@ -43,6 +45,9 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ certifications, pr
     },
   ];
 
+  // PERBAIKAN: Fallback ke array kosong jika competencies ternyata null/undefined dari Sanity
+  const safeCompetencies = competencies || [];
+
   return (
     <section id="skills-certifications" className="py-20 sm:py-28 bg-[#F8F5EF] border-t border-[#DCC9B3]/80 relative">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
@@ -68,12 +73,18 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ certifications, pr
 
         {/* Part 1: Visual Skills Groups */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          {competencies.map((group) => {
-            const isBA = group.category.includes('Business');
-            const isDA = group.category.includes('Data');
+          {safeCompetencies.map((group, index) => {
+            // PERBAIKAN: Menambahkan ?. sebelum includes dan fallback string kosong
+            const categoryName = group?.category || '';
+            const isBA = categoryName.includes('Business');
+            const isDA = categoryName.includes('Data');
+            // PERBAIKAN: Memastikan skills tidak undefined
+            const safeSkills = group?.skills || [];
+            
             return (
               <div
-                key={group.category}
+                // Gunakan index sebagai fallback key jika category kosong
+                key={categoryName || index}
                 className="bg-[#FFFCF7] border border-[#DCC9B3] rounded-3xl p-7 shadow-sm hover:border-[#A58A73] transition-all space-y-5"
               >
                 <div className="flex items-center gap-3">
@@ -88,7 +99,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ certifications, pr
                   </div>
                   <div>
                     <h3 className="font-editorial text-xl font-bold text-[#3E2C22]">
-                      {group.category}
+                      {categoryName || 'General Skills'}
                     </h3>
                     <span className="text-[11px] font-semibold text-[#806047] uppercase tracking-wider">
                       Core Toolset
@@ -97,9 +108,9 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ certifications, pr
                 </div>
 
                 <div className="space-y-2.5 pt-2 border-t border-[#DCC9B3]/50">
-                  {group.skills.map((skill) => (
+                  {safeSkills.map((skill, skillIndex) => (
                     <div
-                      key={skill}
+                      key={skill || skillIndex}
                       className="flex items-center gap-2.5 text-xs sm:text-sm text-[#3E2C22] p-2 rounded-xl hover:bg-[#F8F5EF] transition-colors"
                     >
                       <CheckCircle className="w-4 h-4 text-[#806047] shrink-0" />
@@ -131,7 +142,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = ({ certifications, pr
             href="#certifications"
             className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#3E2C22] text-[#F8F5EF] hover:bg-[#694B36] transition-colors shrink-0"
           >
-            <span>View Certificate Gallery ({certifications.length})</span>
+            <span>View Certificate Gallery ({safeCertifications.length})</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
