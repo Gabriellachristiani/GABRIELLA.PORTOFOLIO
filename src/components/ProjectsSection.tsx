@@ -11,13 +11,16 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects }) =>
   const [activeCategory, setActiveCategory] = useState<'all' | 'business-analysis' | 'data-analytics'>('all');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const filteredProjects = projects.filter((project) => {
+  // PERBAIKAN: Menambahkan fallback || [] agar tidak crash saat array kosong
+  const safeProjects = projects || [];
+
+  const filteredProjects = safeProjects.filter((project) => {
     if (activeCategory === 'all') return true;
-    return project.category === activeCategory;
+    return project?.category === activeCategory;
   });
 
-  const baCount = projects.filter((p) => p.category === 'business-analysis').length;
-  const daCount = projects.filter((p) => p.category === 'data-analytics').length;
+  const baCount = safeProjects.filter((p) => p?.category === 'business-analysis').length;
+  const daCount = safeProjects.filter((p) => p?.category === 'data-analytics').length;
 
   return (
     <section id="projects" className="py-20 sm:py-28 bg-[#F1E8DC]/40 border-t border-[#DCC9B3]/80 relative">
@@ -52,7 +55,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects }) =>
                   : 'text-[#694B36] hover:text-[#3E2C22]'
               }`}
             >
-              All Projects ({projects.length})
+              All Projects ({safeProjects.length})
             </button>
             <button
               onClick={() => setActiveCategory('business-analysis')}
@@ -80,10 +83,16 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects }) =>
         {/* Project Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {filteredProjects.map((project) => {
+            // PERBAIKAN: Melindungi pemanggilan property jika project null
+            if (!project) return null;
+            
             const displayImage = project.coverImage || (project.images && project.images.length > 0 ? project.images[0] : null);
+            // PERBAIKAN: Memastikan array tidak undefined
+            const safeTools = project.tools || [];
+            
             return (
               <article
-                key={project.id}
+                key={project.id || Math.random().toString()}
                 className="group flex flex-col bg-[#FFFCF7] border border-[#DCC9B3] rounded-[28px] overflow-hidden hover:border-[#A58A73] hover:shadow-lg transition-all duration-300"
               >
                 {/* Project Cover Image */}
@@ -94,7 +103,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects }) =>
                   >
                     <img
                       src={displayImage}
-                      alt={project.title}
+                      alt={project.title || 'Project Image'}
                       className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#3E2C22]/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -169,18 +178,19 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ projects }) =>
               <div className="mt-auto px-7 py-5 bg-[#F8F5EF]/60 border-t border-[#DCC9B3]/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 {/* Tools (Clean text with separators) */}
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#806047]">
-                  {project.tools.slice(0, 4).map((tool, idx) => (
-                    <React.Fragment key={tool}>
+                  {/* PERBAIKAN: Menggunakan safeTools agar tidak error saat tools undefined */}
+                  {safeTools.slice(0, 4).map((tool, idx) => (
+                    <React.Fragment key={tool || idx}>
                       <span className="font-medium text-[#694B36]">{tool}</span>
-                      {idx < Math.min(project.tools.length, 4) - 1 && (
+                      {idx < Math.min(safeTools.length, 4) - 1 && (
                         <span className="text-[#DCC9B3]" aria-hidden="true">
                           ·
                         </span>
                       )}
                     </React.Fragment>
                   ))}
-                  {project.tools.length > 4 && (
-                    <span className="text-[11px] text-[#A58A73]">+{project.tools.length - 4} more</span>
+                  {safeTools.length > 4 && (
+                    <span className="text-[11px] text-[#A58A73]">+{safeTools.length - 4} more</span>
                   )}
                 </div>
 
